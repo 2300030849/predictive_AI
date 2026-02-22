@@ -1,0 +1,179 @@
+body{
+margin:0;
+font-family:'Segoe UI';
+background:#f4f7fb;
+}
+
+h1{
+text-align:center;
+padding:30px;
+color:#2c3e50;
+font-weight:600;
+}
+
+.container{
+display:flex;
+justify-content:center;
+gap:40px;
+flex-wrap:wrap;
+padding:20px 40px;
+}
+
+/* CARD */
+.card{
+background:white;
+width:360px;
+padding:25px;
+border-radius:18px;
+box-shadow:0 15px 30px rgba(0,0,0,0.06);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
+box-shadow:0 20px 40px rgba(0,0,0,0.1);
+}
+
+.card h3{
+text-align:center;
+margin-bottom:18px;
+color:#14b8a6;
+font-size:20px;
+}
+
+/* INPUTS */
+.card input{
+width:100%;
+padding:8px;
+margin:6px 0;
+border-radius:8px;
+border:1px solid #d1d5db;
+font-size:13px;
+outline:none;
+transition:0.2s;
+}
+
+.card input:focus{
+border-color:#14b8a6;
+box-shadow:0 0 0 2px rgba(20,184,166,0.2);
+}
+
+/* BUTTON */
+.card button{
+width:100%;
+padding:9px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+background:#14b8a6;
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:0.3s;
+}
+
+.card button:hover{
+background:#0f766e;
+}
+
+/* PROGRESS BAR */
+.progress-container{
+background:#e5e7eb;
+border-radius:12px;
+height:14px;
+overflow:hidden;
+margin-top:15px;
+}
+
+.progress-bar{
+height:100%;
+width:0%;
+background:#22c55e;
+transition:width 0.8s ease;
+border-radius:12px;
+}
+
+/* PERCENT */
+.percent-text{
+text-align:right;
+margin-top:5px;
+font-weight:600;
+font-size:14px;
+color:#374151;
+}
+
+/* STATUS BADGE */
+.status{
+margin-top:10px;
+padding:6px;
+border-radius:8px;
+text-align:center;
+font-weight:600;
+font-size:14px;
+color:white;
+background:#22c55e;
+}
+
+/* BLINK ALERT */
+@keyframes blinkRed{
+0%{background:#ef4444;}
+50%{background:#dc2626;}
+100%{background:#ef4444;}
+}
+
+.blink{
+animation:blinkRed 1s infinite;
+}
+
+/* LIVE SENSOR BOX */
+.live-data{
+margin-top:15px;
+background:#f9fafb;
+padding:12px;
+border-radius:10px;
+font-size:13px;
+line-height:1.6;
+color:#374151;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:6px 15px;
+}
+
+/* FACTORY HEALTH */
+.factory-summary{
+text-align:center;
+margin-bottom:25px;
+font-weight:600;
+}
+
+#factory_health{
+color:#14b8a6;
+font-size:22px;
+}
+
+/* CHART */
+.chart-container{
+width:80%;
+margin:50px auto;
+}
+
+/* DOWNLOAD BUTTON */
+.download-section{
+text-align:center;
+margin:50px;
+}
+
+.download-section button{
+padding:10px 20px;
+border:none;
+border-radius:8px;
+background:#3b82f6;
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:0.3s;
+}
+
+.download-section button:hover{
+background:#1d4ed8;
+}

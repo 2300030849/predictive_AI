@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Factory Monitoring Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+/* RED ALERT OVERLAY */
+#alertOverlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(220,38,38,0.95);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:9999;
+animation:flash 1s infinite;
+}
+
+@keyframes flash{
+0%{background:rgba(220,38,38,0.95);}
+50%{background:rgba(255,0,0,0.95);}
+100%{background:rgba(220,38,38,0.95);}
+}
+
+.alert-box{
+background:white;
+padding:40px;
+border-radius:15px;
+text-align:center;
+width:400px;
+}
+
+.alert-box h2{
+color:#dc2626;
+margin-bottom:15px;
+}
+
+.alert-box button{
+margin-top:20px;
+padding:10px 20px;
+border:none;
+border-radius:8px;
+background:#111827;
+color:white;
+cursor:pointer;
+}
+
+.factory-summary{
+text-align:center;
+margin-bottom:20px;
+}
+
+.chart-container{
+width:80%;
+margin:40px auto;
+}
+
+.download-section{
+text-align:center;
+margin:40px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- ALERT OVERLAY -->
+<div id="alertOverlay">
+<div class="alert-box">
+<h2>⚠ CRITICAL MACHINE ALERT ⚠</h2>
+<p id="alertMessage"></p>
+<button onclick="closeAlert()">ACKNOWLEDGE</button>
+</div>
+</div>
+
+<h1>⚙ AI Predictive Maintenance for Industrial Robotics 🤖</h1>
+
+<div class="factory-summary">
+<h2>🏭 Overall Factory Health:
+<span id="factory_health">0%</span>
+</h2>
+</div>
+
+<div class="container" id="machineContainer"></div>
+
+<div class="chart-container">
+<canvas id="probabilityChart"></canvas>
+</div>
+
+<div class="download-section">
+<button onclick="downloadReport()">📄 Download Detailed PDF Report</button>
+</div>
+
+<script>
+
+let machines=["Packing_Unit_01","Robotic_Arm_02","Conveyor_System_03"];
+let container=document.getElementById("machineContainer");
+
+// Create Cards
+machines.forEach(machine=>{
+container.innerHTML+=`
+<div class="card">
+<h3>${machine}</h3>
+
+<input id="${machine}_air" placeholder="Air Temp">
+<input id="${machine}_process" placeholder="Process Temp">
+<input id="${machine}_rot" placeholder="Rot Speed">
+<input id="${machine}_torque" placeholder="Torque">
+<input id="${machine}_wear" placeholder="Tool Wear">
+
+<button onclick="manualPredict('${machine}')">
+RUN ANALYSIS
+</button>
+
+<div class="progress-container">
+<div id="${machine}_bar" class="progress-bar"></div>
+</div>
+
+<div id="${machine}_percent" class="percent-text">0%</div>
+
+<div id="${machine}_status" class="status" style="background:#22c55e;">
+Monitoring...
+</div>
+
+<div id="${machine}_live" class="live-data">
+Live Auto Mode Active...
+</div>
+
+</div>`;
+});
+
+// ALERT FUNCTIONS
+function showOverlay(machine, probability){
+document.getElementById("alertMessage").innerHTML=
+"<strong>"+machine+"</strong><br>Failure Risk: "+probability+"%<br><br>Immediate inspection required!";
+document.getElementById("alertOverlay").style.display="flex";
+}
+
+function closeAlert(){
+document.getElementById("alertOverlay").style.display="none";
+}
+
+// MANUAL MODE
+function manualPredict(machine){
+
+let air=document.getElementById(machine+"_air").value;
+let process=document.getElementById(machine+"_process").value;
+let rot=document.getElementById(machine+"_rot").value;
+let torque=document.getElementById(machine+"_torque").value;
+let wear=document.getElementById(machine+"_wear").value;
+
+fetch("/manual_predict",{
+method:"POST",
+headers:{"Content-Type":"application/x-www-form-urlencoded"},
+body:
+"machine_id="+machine+
+"&air_temp="+air+
+"&process_temp="+process+
+"&rot_speed="+rot+
+"&torque="+torque+
+"&tool_wear="+wear
+})
+.then(res=>res.json())
+.then(data=>{
+updateMachineUI(machine, data);
+});
+}
+
+// GRAPH
+let ctx=document.getElementById('probabilityChart').getContext('2d');
+
+let chart=new Chart(ctx,{
+type:'line',
+data:{
+labels:[],
+datasets:[
+{label:'Packing Unit',data:[],borderColor:'#14b8a6'},
+{label:'Robotic Arm',data:[],borderColor:'#ef4444'},
+{label:'Conveyor System',data:[],borderColor:'#3b82f6'}
+]
+},
+options:{
+responsive:true,
+scales:{y:{beginAtZero:true,max:100}}
+}
+});
+
+// UPDATE UI
+function updateMachineUI(machine, data){
+
+document.getElementById(machine+"_bar").style.width=data.probability+"%";
+document.getElementById(machine+"_percent").innerHTML=data.probability+"%";
+document.getElementById(machine+"_status").innerHTML=data.status;
+
+if(data.probability > 70){
+document.getElementById(machine+"_status").classList.add("blink");
+showOverlay(machine, data.probability);
+}else{
+document.getElementById(machine+"_status").classList.remove("blink");
+}
+
+}
+
+// AUTO MODE
+setInterval(async ()=>{
+
+let results=await Promise.all(
+machines.map(m=>fetch("/auto_predict/"+m).then(r=>r.json()))
+);
+
+let total=0;
+let time=new Date().toLocaleTimeString();
+chart.data.labels.push(time);
+
+results.forEach((data,index)=>{
+let machine=machines[index];
+total+=data.probability;
+
+updateMachineUI(machine,data);
+
+// Live Sensor Values
+document.getElementById(machine+"_live").innerHTML=
+"Air Temp: "+data.air_temp+"<br>"+
+"Process Temp: "+data.process_temp+"<br>"+
+"Rot Speed: "+data.rot_speed+"<br>"+
+"Torque: "+data.torque+"<br>"+
+"Tool Wear: "+data.tool_wear;
+
+chart.data.datasets[index].data.push(data.probability);
+
+});
+
+if(chart.data.labels.length>10){
+chart.data.labels.shift();
+chart.data.datasets.forEach(ds=>ds.data.shift());
+}
+
+chart.update();
+
+document.getElementById("factory_health").innerHTML=
+Math.round(total/3)+"%";
+
+},3000);
+
+function downloadReport(){
+window.location.href="/download_report";
+}
+
+</script>
+
+</body>
+</html>
